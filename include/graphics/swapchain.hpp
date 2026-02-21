@@ -36,6 +36,8 @@ public:
     VkFormat present_format() const noexcept;
     VkFormat depth_format() const noexcept;
 
+    VkFramebuffer framebuffers(uint32_t index) const noexcept;
+
 private:
     VkSwapchainKHR m_swapchain{VK_NULL_HANDLE};
     VkDevice m_device{VK_NULL_HANDLE};
@@ -44,6 +46,7 @@ private:
     VkFormat m_present_format{VK_FORMAT_UNDEFINED};
     VkFormat m_depth_format{VK_FORMAT_UNDEFINED};
     VkExtent2D m_extent;
+    VkImage m_depth_image{VK_NULL_HANDLE};
     VkImageView m_depth_image_view{VK_NULL_HANDLE};
     VkDeviceMemory m_depth_memory{VK_NULL_HANDLE};
 

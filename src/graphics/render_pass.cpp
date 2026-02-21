@@ -59,8 +59,6 @@ bool RenderPass::init(VkDevice device, VkFormat color_format, VkFormat depth_for
     render_pass_info.subpassCount = 1;
     render_pass_info.pSubpasses = &subpass;
 
-    LOG_INFO("Render Pass", "Creating render pass");
-
     if (vkCreateRenderPass(device, &render_pass_info, nullptr, &m_render_pass) != VK_SUCCESS)
     {
         LOG_ERROR("Render Pass", "Failed to create render pass");
@@ -74,10 +72,8 @@ bool RenderPass::init(VkDevice device, VkFormat color_format, VkFormat depth_for
 
 void RenderPass::cleanup(VkDevice device) noexcept
 {
-    if (m_render_pass != VK_NULL_HANDLE)
-    {
-        vkDestroyRenderPass(device, m_render_pass, nullptr);
-    }
+    vkDestroyRenderPass(device, m_render_pass, nullptr);
+    m_render_pass = VK_NULL_HANDLE;
 }
 
 VkRenderPass RenderPass::render_pass() const noexcept

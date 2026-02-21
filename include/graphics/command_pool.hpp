@@ -21,7 +21,6 @@ public:
     void reset() noexcept;
 
     VkCommandPool pool() const noexcept;
-    
 
 private:
     VkDevice m_device{VK_NULL_HANDLE};

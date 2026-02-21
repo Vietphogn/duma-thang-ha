@@ -53,20 +53,14 @@ bool Frame::init(VkDevice device, uint32_t queue_family_index) noexcept
 
 void Frame::destroy(VkDevice device) noexcept
 {
-    if (frame_fence != VK_NULL_HANDLE)
-    {
-        vkDestroyFence(device, frame_fence, nullptr);
-    }
+    vkDestroyFence(device, frame_fence, nullptr);
+    frame_fence = VK_NULL_HANDLE;
 
-    if (acquire_semaphore != VK_NULL_HANDLE)
-    {
-        vkDestroySemaphore(device, acquire_semaphore, nullptr);
-    }
+    vkDestroySemaphore(device, acquire_semaphore, nullptr);
+    acquire_semaphore = VK_NULL_HANDLE;
 
-    if (present_semaphore != VK_NULL_HANDLE)
-    {
-        vkDestroySemaphore(device, present_semaphore, nullptr);
-    }
+    vkDestroySemaphore(device, present_semaphore, nullptr);
+    present_semaphore = VK_NULL_HANDLE;
 
     command_pool.cleanup();
 }

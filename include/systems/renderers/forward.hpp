@@ -32,7 +32,7 @@ private:
 
     graphics::RenderPass m_render_pass;
 
-    void record_commands(VkCommandBuffer command_buffer, uint32_t frame_index) noexcept;
+    void record_commands(VkCommandBuffer command_buffer, uint32_t image_index) noexcept;
 };
 } // namespace systems
 } // namespace niqqa

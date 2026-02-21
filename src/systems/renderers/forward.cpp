@@ -19,7 +19,10 @@ bool ForwardRenderer::init(graphics::Device *device, graphics::Swapchain *swapch
         }
     }
 
-    m_render_pass.init(m_device->device(), m_swapchain->present_format(), m_swapchain->depth_format());
+    if (!m_render_pass.init(m_device->device(), m_swapchain->present_format(), m_swapchain->depth_format()))
+    {
+        return false;
+    }
 
     return true;
 }
@@ -42,7 +45,7 @@ void ForwardRenderer::draw_frame() noexcept
     current_frame.begin_commands();
 }
 
-void ForwardRenderer::record_commands(VkCommandBuffer command_buffer, uint32_t frame_index) noexcept
+void ForwardRenderer::record_commands(VkCommandBuffer command_buffer, uint32_t image_index) noexcept
 {
     VkClearValue clear_values[2]{};
     clear_values[0].color = {{0.0f, 0.0f, 0.0f, 1.0f}};
@@ -51,9 +54,7 @@ void ForwardRenderer::record_commands(VkCommandBuffer command_buffer, uint32_t f
     VkRenderPassBeginInfo begin_info{};
     begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     begin_info.renderPass = m_render_pass.render_pass();
-
-    // TODO: framebuffers
-
+    begin_info.framebuffer = m_swapchain->framebuffers(image_index);
     begin_info.clearValueCount = 2;
     begin_info.pClearValues = clear_values;
     begin_info.renderArea.offset = {0, 0};
@@ -74,7 +75,7 @@ void ForwardRenderer::record_commands(VkCommandBuffer command_buffer, uint32_t f
     vkCmdSetViewport(command_buffer, 0, 1, &viewport);
     vkCmdSetScissor(command_buffer, 0, 1, &scissor);
 
-    // TODO: pipeline
+    // TODO: add graphics pipeline
 }
 } // namespace systems
 } // namespace niqqa

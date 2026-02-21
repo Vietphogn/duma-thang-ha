@@ -26,10 +26,8 @@ bool CommandPool::init(VkDevice device, uint32_t queue_family_index, VkCommandPo
 
 void CommandPool::cleanup() noexcept
 {
-    if (m_pool != VK_NULL_HANDLE)
-    {
-        vkDestroyCommandPool(m_device, m_pool, nullptr);
-    }
+    vkDestroyCommandPool(m_device, m_pool, nullptr);
+    m_pool = VK_NULL_HANDLE;
 }
 
 VkCommandBuffer CommandPool::allocate_primary() noexcept

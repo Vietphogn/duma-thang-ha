@@ -56,10 +56,7 @@ bool Instance::init() noexcept
 
 void Instance::cleanup() noexcept
 {
-    if (m_instance != VK_NULL_HANDLE)
-    {
-        vkDestroyInstance(m_instance, nullptr);
-    }
+    vkDestroyInstance(m_instance, nullptr);
 }
 
 std::vector<const char *> Instance::get_required_extensions()

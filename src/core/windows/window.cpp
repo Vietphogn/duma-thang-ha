@@ -33,16 +33,11 @@ void Window::poll_events() noexcept
 
 void Window::cleanup() noexcept
 {
-    if (m_window)
-    {
-        glfwDestroyWindow(m_window);
-    }
+    glfwDestroyWindow(m_window);
 }
 
 bool Window::init(uint32_t width, uint32_t height, const std::string &title, bool resizable, bool fullscreen) noexcept
 {
-    LOG_INFO("GLFW", "Initializing GLFW");
-
     if (!glfwInit())
     {
         LOG_ERROR("GLFW", "Failed to initialize GLFW");

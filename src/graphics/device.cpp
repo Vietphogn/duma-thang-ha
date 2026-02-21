@@ -8,6 +8,7 @@
 #include <set>
 #include <string>
 #include <cstring>
+#include <format>
 
 namespace niqqa
 {
@@ -95,10 +96,8 @@ bool Device::init(VkInstance instance, VkSurfaceKHR surface) noexcept
 
 void Device::cleanup() noexcept
 {
-    if (m_device != VK_NULL_HANDLE)
-    {
-        vkDestroyDevice(m_device, nullptr);
-    }
+    vkDestroyDevice(m_device, nullptr);
+    m_device = VK_NULL_HANDLE;
 }
 
 VkPhysicalDevice Device::gpu() const noexcept
@@ -183,20 +182,17 @@ bool Device::pick_physical_device(VkSurfaceKHR surface) noexcept
     uint32_t device_count = 0;
     vkEnumeratePhysicalDevices(m_instance, &device_count, nullptr);
 
-    LOG_INFO("Device", "Finding GPUs with Vulkan support");
-
     if (device_count == 0)
     {
         LOG_ERROR("Device", "Failed to find GPUs with Vulkan support");
         return false;
     }
 
-    LOG_INFO("Device", "Found GPUs with Vulkan support");
+    std::string msg = std::format("Found {} GPU(s) with Vulkan support", device_count);
+    LOG_INFO("Device", msg);
 
     std::vector<VkPhysicalDevice> devices(device_count);
     vkEnumeratePhysicalDevices(m_instance, &device_count, devices.data());
-
-    LOG_INFO("Device", "Finding a suitable GPU");
 
     std::multimap<int32_t, VkPhysicalDevice> candidates;
 
@@ -216,10 +212,11 @@ bool Device::pick_physical_device(VkSurfaceKHR surface) noexcept
         return false;
     }
 
-    LOG_INFO("Device", "Found a suitable GPU");
-
     vkGetPhysicalDeviceProperties(m_gpu, &m_properties);
     vkGetPhysicalDeviceFeatures(m_gpu, &m_features);
+
+    msg = std::format("Selected GPU: %s", m_properties.deviceName);
+    LOG_INFO("Device", msg);
 
     return true;
 }
@@ -377,15 +374,13 @@ bool Device::create_logical_device(VkSurfaceKHR surface) noexcept
         create_info.enabledLayerCount = 0;
     }
 
-    LOG_INFO("Device", "Creating logical device");
-
     if (vkCreateDevice(m_gpu, &create_info, nullptr, &m_device) != VK_SUCCESS)
     {
         LOG_ERROR("Device", "Failed to create logical device");
         return false;
     }
-
-    LOG_INFO("Device", "Device created");
+    
+    LOG_INFO("Device", "Logical device created");
 
     vkGetDeviceQueue(m_device, queue_families.graphics_family.value(), 0, &m_graphics_queue);
 
