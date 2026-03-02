@@ -6,7 +6,7 @@ namespace niqqa
 {
 namespace graphics
 {
-bool RenderPass::init(VkDevice device, VkFormat color_format, VkFormat depth_format) noexcept
+bool RenderPass::create(VkDevice device, VkFormat color_format, VkFormat depth_format) noexcept
 {
     VkAttachmentDescription color_attachment{};
     color_attachment.format = color_format;

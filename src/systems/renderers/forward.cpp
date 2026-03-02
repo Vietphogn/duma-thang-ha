@@ -1,10 +1,16 @@
 #include <systems/renderers/forward.hpp>
 
+#include <graphics/image.hpp>
+#include <log.hpp>
+
 namespace niqqa
 {
 namespace systems
 {
-bool ForwardRenderer::init(graphics::Device *device, graphics::Swapchain *swapchain) noexcept
+bool ForwardRenderer::init(graphics::Device *device, 
+                           graphics::Swapchain *swapchain, 
+                           const std::string &vert_path, 
+                           const std::string &frag_path) noexcept
 {
     m_device = device;
     m_swapchain = swapchain;
@@ -19,7 +25,14 @@ bool ForwardRenderer::init(graphics::Device *device, graphics::Swapchain *swapch
         }
     }
 
-    if (!m_render_pass.init(m_device->device(), m_swapchain->present_format(), m_swapchain->depth_format()))
+    if (!m_render_pass.create(m_device->device(),
+                              m_swapchain->present_format(), 
+                              m_swapchain->depth_format()))
+    {
+        return false;
+    }
+
+    if (!m_pipeline.create(m_device->device(), swapchain->extent(), m_render_pass.render_pass(), vert_path, frag_path))
     {
         return false;
     }
@@ -39,10 +52,51 @@ void ForwardRenderer::draw_frame() noexcept
                           m_swapchain->swapchain(), 
                           UINT64_MAX, 
                           current_frame.acquire_semaphore, 
-                          current_frame.frame_fence, 
+                          VK_NULL_HANDLE, 
                           &image_index);
 
     current_frame.begin_commands();
+}
+
+// move this shit to swapchain
+bool ForwardRenderer::create_framebuffers(VkRenderPass render_pass) noexcept
+{
+    std::vector<graphics::Image> present_images = m_swapchain->present_images();
+    VkImageView depth_image_view = m_swapchain->depth_image_view();
+    VkExtent2D extent = m_swapchain->extent();
+
+    m_framebuffers.resize(present_images.size());
+
+    for (size_t i = 0; i < m_framebuffers.size(); ++i)
+    {
+        VkImageView attachments[] = {
+            present_images[i].image_view,
+            depth_image_view 
+        };
+
+        VkFramebufferCreateInfo framebuffer_info{};
+        framebuffer_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        framebuffer_info.renderPass = render_pass;
+        framebuffer_info.attachmentCount = 2;
+        framebuffer_info.pAttachments = attachments;
+        framebuffer_info.width = extent.width;
+        framebuffer_info.height = extent.height;
+        framebuffer_info.layers = 1;
+
+        if (vkCreateFramebuffer(m_device->device(), &framebuffer_info, nullptr, &m_framebuffers[i]) != VK_SUCCESS)
+        {
+            LOG_ERROR("Swapchain", "Failed to create framebuffer");
+
+            for (size_t j = 0; j < i; ++j)
+            {
+                vkDestroyFramebuffer(m_device->device(), m_framebuffers[j], nullptr);
+            }
+
+            return false;
+        }
+    }
+
+    return true;
 }
 
 void ForwardRenderer::record_commands(VkCommandBuffer command_buffer, uint32_t image_index) noexcept
@@ -54,7 +108,7 @@ void ForwardRenderer::record_commands(VkCommandBuffer command_buffer, uint32_t i
     VkRenderPassBeginInfo begin_info{};
     begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     begin_info.renderPass = m_render_pass.render_pass();
-    begin_info.framebuffer = m_swapchain->framebuffers(image_index);
+    begin_info.framebuffer = m_framebuffers[image_index];
     begin_info.clearValueCount = 2;
     begin_info.pClearValues = clear_values;
     begin_info.renderArea.offset = {0, 0};
@@ -76,6 +130,9 @@ void ForwardRenderer::record_commands(VkCommandBuffer command_buffer, uint32_t i
     vkCmdSetScissor(command_buffer, 0, 1, &scissor);
 
     // TODO: add graphics pipeline
+    vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline.pipeline());
+
+    vkCmdDraw(command_buffer, 3, 1, 0, 0);
 }
 } // namespace systems
 } // namespace niqqa

@@ -9,7 +9,7 @@ namespace graphics
 class RenderPass 
 {
 public:
-    bool init(VkDevice device, VkFormat color_format, VkFormat depth_format) noexcept;
+    bool create(VkDevice device, VkFormat color_format, VkFormat depth_format) noexcept;
     void cleanup(VkDevice device) noexcept;
 
     VkRenderPass render_pass() const noexcept;

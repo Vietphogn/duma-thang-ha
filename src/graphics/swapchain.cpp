@@ -85,8 +85,7 @@ bool Swapchain::create(Device &device,
                        VkSurfaceKHR surface,
                        VkExtent2D actual_extent,
                        VkFormat user_defined_format,
-                       VkPresentModeKHR user_defined_present_mode,
-                       VkRenderPass render_pass) noexcept
+                       VkPresentModeKHR user_defined_present_mode) noexcept
 {
     m_device = device.device();
     m_surface = surface;
@@ -182,13 +181,6 @@ bool Swapchain::create(Device &device,
 
 void Swapchain::cleanup() noexcept
 {
-    for (size_t i = 0; i < m_framebuffers.size(); ++i)
-    {
-        vkDestroyFramebuffer(m_device, m_framebuffers[i], nullptr);
-        m_framebuffers[i] = VK_NULL_HANDLE;
-    }
-    m_framebuffers.clear();
-
     for (size_t i = 0; i < m_present_images.size(); ++i)
     {
         vkDestroyImageView(m_device, m_present_images[i].image_view, nullptr);
@@ -207,11 +199,6 @@ void Swapchain::cleanup() noexcept
 
     vkDestroySwapchainKHR(m_device, m_swapchain, nullptr);
     m_swapchain = VK_NULL_HANDLE;
-}
-
-VkFramebuffer Swapchain::framebuffers(uint32_t index) const noexcept
-{
-    return m_framebuffers[index];
 }
 
 VkFormat Swapchain::find_supported_format(VkPhysicalDevice gpu, const std::vector<VkFormat> &candidates, VkImageTiling tiling, VkFormatFeatureFlags feature_flag) noexcept
@@ -306,6 +293,16 @@ VkFormat Swapchain::depth_format() const noexcept
     return m_depth_format;
 }
 
+VkImageView Swapchain::depth_image_view() const noexcept
+{
+    return m_depth_image_view;
+}
+
+const std::vector<Image> &Swapchain::present_images() const noexcept
+{
+    return m_present_images;
+}
+
 bool Swapchain::create_image_views() noexcept
 {
     for (size_t i = 0; i < m_present_images.size(); ++i)
@@ -341,42 +338,6 @@ bool Swapchain::create_image_views() noexcept
     LOG_INFO("Swapchain", "Swapchain image views created");
 
     return true; 
-}
-
-bool Swapchain::create_framebuffers(VkRenderPass render_pass) noexcept
-{
-    m_framebuffers.resize(m_present_images.size());
-
-    for (size_t i = 0; i < m_framebuffers.size(); ++i)
-    {
-        VkImageView attachments[] = {
-            m_present_images[i].image_view,
-            m_depth_image_view
-        };
-
-        VkFramebufferCreateInfo framebuffer_info{};
-        framebuffer_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-        framebuffer_info.renderPass = render_pass;
-        framebuffer_info.attachmentCount = 2;
-        framebuffer_info.pAttachments = attachments;
-        framebuffer_info.width = m_extent.width;
-        framebuffer_info.height = m_extent.height;
-        framebuffer_info.layers = 1;
-
-        if (vkCreateFramebuffer(m_device, &framebuffer_info, nullptr, &m_framebuffers[i]) != VK_SUCCESS)
-        {
-            LOG_ERROR("Swapchain", "Failed to create framebuffer");
-
-            for (size_t j = 0; j < i; ++j)
-            {
-                vkDestroyFramebuffer(m_device, m_framebuffers[j], nullptr);
-            }
-
-            return false;
-        }
-    }
-
-    return true;
 }
 
 bool Swapchain::create_image(VkPhysicalDevice gpu,

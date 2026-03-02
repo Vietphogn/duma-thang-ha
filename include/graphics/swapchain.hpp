@@ -26,8 +26,7 @@ public:
                 VkSurfaceKHR surface, 
                 VkExtent2D actual_extent,
                 VkFormat user_defined_format,
-                VkPresentModeKHR user_defined_present_mode,
-                VkRenderPass render_pass) noexcept;
+                VkPresentModeKHR user_defined_present_mode) noexcept;
     
     void cleanup() noexcept;
 
@@ -35,8 +34,9 @@ public:
     VkExtent2D extent() const noexcept;
     VkFormat present_format() const noexcept;
     VkFormat depth_format() const noexcept;
+    VkImageView depth_image_view() const noexcept;
 
-    VkFramebuffer framebuffers(uint32_t index) const noexcept;
+    const std::vector<Image> &present_images() const noexcept;
 
 private:
     VkSwapchainKHR m_swapchain{VK_NULL_HANDLE};
@@ -51,7 +51,6 @@ private:
     VkDeviceMemory m_depth_memory{VK_NULL_HANDLE};
 
     std::vector<Image> m_present_images;
-    std::vector<VkFramebuffer> m_framebuffers;
 
     VkFormat find_supported_format(VkPhysicalDevice gpu, const std::vector<VkFormat> &candidates, VkImageTiling tiling, VkFormatFeatureFlags feature_flag) noexcept;
     VkFormat find_depth_format(VkPhysicalDevice gpu) noexcept;
@@ -61,7 +60,6 @@ private:
     VkExtent2D choose_swapchain_extent(VkSurfaceCapabilitiesKHR capabilities, VkExtent2D actual_extent) noexcept;
 
     bool create_image_views() noexcept;
-    bool create_framebuffers(VkRenderPass render_pass) noexcept;
     bool create_image(VkPhysicalDevice gpu,
                       uint32_t width,
                       uint32_t height,
